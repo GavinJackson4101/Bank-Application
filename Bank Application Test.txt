@@ -1,0 +1,304 @@
+@using Telerik.Blazor.Components
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+
+@inject ProtectedSessionStorage ProtectedSessionStorage
+@inject NavigationManager NavigationManager
+
+@page "/BankAccount"
+@layout EmptyLayout
+
+<style>
+
+    body, html {
+        height: 100%;
+        margin: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .container {
+        text-align: center;
+    }
+
+</style>
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank Account Application</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h3>Bank Account Application</h3>
+    </div>
+</body>
+</html>
+
+@if (showBankingScreen)
+{
+    <div>Account ID: @sponsorTypes.accountID</div>
+    <div>Total Amount: $@sponsorTypes.balance</div>
+    <button @onclick="ViewAccountInfo">View Account Information</button>
+    <button @onclick="Deposit">Deposit</button>
+    <button @onclick="Withdraw">Withdraw</button>
+}
+
+@if (depositToAccount)
+{
+    <div>
+        <label>Please enter your deposit amount:</label>
+        <input @bind-value="depositAmount">
+    </div>
+    <div style="margin-left:150px; margin-top: 10px;">
+        <button @onclick="depositForm">Enter</button>
+        <button @onclick="CloseDepositForm">Close Form</button>
+    </div>
+}
+
+@if (showWithdrawScreen)
+{
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Bank Account Application</title>
+        <link rel="stylesheet" href="styles.css">
+    </head>
+    <body>
+        <div class="container">
+            <div>
+                <label>Please enter your withdraw amount ($30 overdraft fee):</label>
+                <input @bind-value="withdrawAmount">
+            </div>
+            <div style="margin-left:80px; margin-top: 10px;">
+                <button @onclick="withdrawForm">Enter</button>
+                <button @onclick="CloseWithdrawForm">Close Form</button>
+            </div>
+            @if (errorPopup)
+            {
+                foreach (string line in errorPopUpTexts)
+                {
+                    <div style="color: red">@line</div>
+                }
+            }
+        </div>
+    </body>
+    </html>
+}
+
+@if (viewAccountInfo)
+{
+    <div>First Name: @sponsorTypes.firstName</div>
+    <div>Last Name: @sponsorTypes.lastName</div>
+    <div>Account ID: @sponsorTypes.accountID</div>
+    <div>Account Balance: $@sponsorTypes.balance</div>
+    <button @onclick="CloseAccoutnInfo">Close Form</button>
+}
+
+@if (enterinitialBalance)
+{
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Bank Account Application</title>
+        <link rel="stylesheet" href="styles.css">
+    </head>
+    <body>
+        <div class="container">
+            <div>Please sign up by filling in all information below.</div>
+            <div style="margin-top: 10px;">
+                <label>Please enter your First Name:</label>
+                <input @bind-value="intialFirstName">
+            </div>
+            <div style="margin-top: 10px;">
+                <label>Please enter your Last Name:</label>
+                <input @bind-value="initialLastName">
+            </div>
+            <div style="margin-top: 10px;">
+                <label>Please enter your Account ID:</label>
+                <input @bind-value="initialAccountID">
+            </div>
+            <div style="margin-top: 10px;">
+                <label>Please enter your intial balance ($500 account minimum):</label>
+                <input @bind-value="intialBalance">
+            </div>
+            <button style="margin-top: 10px;" @onclick="Initialdeposit">Enter</button>
+            <button style="margin-top: 10px;" @onclick="ReturnToRoot">Close Form</button>
+            @if (errorPopup)
+            {
+                foreach (string line in errorPopUpTexts)
+                {
+                    <div style="color: red">@line</div>
+                }
+            }
+        </div>
+    </body>
+    </html>
+}
+
+
+
+
+@code {
+
+    public UserInfo sponsorTypes = new UserInfo();
+    public List<string> errorPopUpTexts = new List<string>();
+
+    public bool enterinitialBalance;
+    public bool showWithdrawScreen;
+    public bool errorPopup;
+    public bool showBankingScreen;
+    public bool viewAccountInfo;
+    public bool depositToAccount;
+    public double intialBalance;
+    public double depositAmount;
+    public double withdrawAmount;
+    public string intialFirstName;
+    public string initialLastName;
+    public int initialAccountID;
+
+    protected override void OnInitialized()
+    {
+        enterinitialBalance = true;
+    }
+
+    public class UserInfo
+    {
+        public string firstName { get; set; }
+
+        public string lastName { get; set; }
+
+        public int accountID { get; set; }
+
+        public double balance { get; set; }
+    }
+
+    public void ZeroConstructor()
+    {
+        //created to reset balance of user
+        sponsorTypes.balance = 0;
+        StateHasChanged();
+    }
+
+    public void Deposit()
+    {
+
+        showBankingScreen = false;
+        depositToAccount = true;
+    }
+
+    public void Withdraw()
+    {
+        showBankingScreen = false;
+        showWithdrawScreen = true;
+    }
+
+    public void ViewAccountInfo()
+    {
+        showBankingScreen = false;
+        viewAccountInfo = true;
+    }
+
+    public void Initialdeposit()
+    {
+        if (intialBalance is >= 500 && intialFirstName is not null && initialLastName is not null && initialAccountID is not 0)
+        {
+            sponsorTypes.firstName = intialFirstName;
+            sponsorTypes.lastName = initialLastName;
+            sponsorTypes.accountID = initialAccountID;
+            sponsorTypes.balance = intialBalance;
+            errorPopUpTexts.Clear();
+            CloseInitialForm();
+        }
+        else
+        {
+            errorPopUpTexts.Clear();
+            if (intialBalance is not >= 500)
+            {
+                errorPopUpTexts.Add("The initial balance has been left empty or is less than the minimum of $500.");
+            }
+            if (intialFirstName is null)
+            {
+                errorPopUpTexts.Add("The first name field has been left empty.");
+            }
+            if (initialLastName is null)
+            {
+                errorPopUpTexts.Add("The last name field has been left empty.");
+            }
+            if (initialAccountID is 0)
+            {
+                errorPopUpTexts.Add("The account idea was left 0.");
+            }
+            errorPopup = true;
+        }
+
+    }
+
+    public void depositForm()
+    {
+        sponsorTypes.balance += depositAmount;
+        CloseDepositForm();
+    }
+
+    public void withdrawForm()
+    {
+        errorPopUpTexts.Clear();
+        if (withdrawAmount > sponsorTypes.balance)
+        {
+            withdrawAmount += 30;
+            sponsorTypes.balance -= withdrawAmount;
+            errorPopUpTexts.Add("An overdraft fee of $30 has been charged from account.");
+        }
+        else
+        {
+            sponsorTypes.balance -= withdrawAmount;
+            errorPopUpTexts.Add($"Withdraw amount of {withdrawAmount} has been taken out of account.");
+        }
+        errorPopup = true;
+        //CloseDepositForm();
+    }
+
+    public void CloseDepositForm()
+    {
+        depositToAccount = false;
+        showBankingScreen = true;
+    }
+
+    public void CloseWithdrawForm()
+    {
+        errorPopUpTexts.Clear();
+        showWithdrawScreen = false;
+        showBankingScreen = true;
+    }
+
+    public void CloseAccoutnInfo()
+    {
+        viewAccountInfo = false;
+        showBankingScreen = true;
+    }
+
+    public void CloseAccountInfo()
+    {
+        viewAccountInfo = false;
+    }
+
+    public void CloseInitialForm()
+    {
+        enterinitialBalance = false;
+        showBankingScreen = true;
+    }
+
+    public void ReturnToRoot()
+    {
+        NavigationManager.NavigateTo("/");
+
+    }
+}
